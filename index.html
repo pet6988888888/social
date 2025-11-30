@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"> <!-- Enforce dark mode -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Social Post Creator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom styles for the app container */
+        .post-creator-container {
+            /* Set to 100vh to ensure the entire app takes up the viewport height */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        /* Dark theme variables only */
+        :root {
+            --color-bg: #111827; /* Darker slate */
+            --color-text: #F9FAFB;
+            --color-card-bg: #1F2937; /* Even darker slate */
+            --color-border: #374151;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card {
+            background-color: var(--color-card-bg);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* * New Canvas Wrapper Styling: 
+         * 1. Uses aspect-ratio based on a JS variable.
+         * 2. Sets max-height to 100% of the parent container height.
+         * 3. Sets width to 'auto' to ensure it scales based on height first.
+         */
+        #canvasWrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-height: 100%; /* CRITICAL: Ensure it respects the container's height limit */
+            width: auto;
+            margin: 0 auto; /* Center horizontally in its column */
+            aspect-ratio: var(--aspect-ratio, 9/16); /* Default 9:16 */
+        }
+        
+        #postCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            height: 100%;
+            width: 100%;
+            display: block;
+            /* Use CSS variable to control radius dynamically */
+            border-radius: var(--canvas-border-radius, 0.5rem); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            background-color: #374151; /* Default dark fallback */
+            transition: border-radius 0.3s ease;
+        }
+        
+        /* Apply fonts for preview in the select box */
+        #textFont option[value="Roboto"] { font-family: Roboto, sans-serif; }
+        #textFont option[value="Open Sans"] { font-family: "Open Sans", sans-serif; }
+        #textFont option[value="Lobster"] { font-family: Lobster, cursive; }
+        #textFont option[value="Bebas Neue"] { font-family: "Bebas Neue", sans-serif; }
+        #textFont option[value="Monoton"] { font-family: Monoton, cursive; }
+        #textFont option[value="Lato"] { font-family: Lato, sans-serif; }
+        #textFont option[value="Montserrat"] { font-family: Montserrat, sans-serif; }
+        #textFont option[value="Oswald"] { font-family: Oswald, sans-serif; }
+        #textFont option[value="Playfair Display"] { font-family: "Playfair Display", serif; }
+        #textFont option[value="Merriweather"] { font-family: Merriweather, serif; }
+        #textFont option[value="Pacifico"] { font-family: Pacifico, cursive; }
+        #textFont option[value="Press Start 2P"] { font-family: "Press Start 2P", cursive; }
+        
+        /* Custom class for active buttons */
+        .toggle-active {
+            background-color: #4C51BF !important; /* Indigo-700 */
+            border-color: #4C51BF !important;
+            color: white;
+        }
+
+    </style>
+    <!-- Load extra Google Fonts for wider selection -->
+    <!-- Expanded list of fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Monoton&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="transition-colors duration-300">
+
+<div id="app" class="post-creator-container">
+
+    <!-- Header -->
+    <header class="mb-6">
+        <h1 class="text-3xl font-extrabold text-blue-400">Social Post Studio</h1>
+    </header>
+
+    <!-- 
+        Main content area: 
+        - flex-grow: takes up all remaining vertical space.
+        - lg:h-[calc(100vh-5rem)]: ensures the height is exactly viewport height minus header/margins.
+    -->
+    <main class="flex flex-col lg:flex-row gap-6 flex-grow lg:h-[calc(100vh-5rem)]">
+        
+        <!-- Controls Panel (Left/Top) -->
+        <div class="lg:w-2/5 w-full card p-5 rounded-xl space-y-6 overflow-y-auto h-full">
+            <h2 class="text-xl font-semibold border-b pb-2 border-gray-700">Customize Post</h2>
+
+            <!-- 1. Platform/Aspect Ratio Selector -->
+            <div>
+                <label class="block text-sm font-medium mb-2">1. Choose Platform Aspect Ratio</label>
+                <select id="platformSelect" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600">
+                    <option value="1:1" data-w="1080" data-h="1080">Instagram Post (1:1)</option>
+                    <option value="4:5" data-w="1080" data-h="1350">Instagram Portrait (4:5)</option>
+                    <option value="9:16" data-w="1080" data-h="1920" selected>Story/Reel/TikTok (9:16)</option>
+                    <option value="16:9" data-w="1920" data-h="1080">YouTube Thumbnail (16:9)</option>
+                </select>
+            </div>
+
+            <!-- 2. Image Uploader -->
+            <div>
+                <label class="block text-sm font-medium mb-2">2. Background Image</label>
+                <input type="file" id="imageUpload" accept="image/*" class="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-900 file:text-blue-300 hover:file:bg-blue-800">
+            </div>
+
+            <!-- 3. Logo Uploader (Drag to Reposition) -->
+            <div class="border-t pt-4 border-gray-700">
+                <label class="block text-sm font-medium mb-2">3. Logo Image (Drag to Reposition)</label>
+                <input type="file" id="logoUpload" accept="image/*" class="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-900 file:text-pink-300 hover:file:bg-pink-800">
+                
+                <!-- Logo Size Control -->
+                <div id="logoSizeControl" class="flex items-center space-x-2 mt-3" style="display: none;">
+                    <label class="block text-xs font-medium w-20">Logo Size</label>
+                    <input type="range" id="logoSize" value="100" min="20" max="300" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <span id="logoSizeValue" class="text-sm font-mono w-10">100px</span>
+                </div>
+            </div>
+
+            <!-- 4. Color Overlay -->
+            <div class="space-y-3 border-t pt-4 border-gray-700">
+                <label class="block text-sm font-medium">4. Color Overlay</label>
+                <div class="flex items-center space-x-4">
+                    <input type="color" id="overlayColor" value="#000000" class="p-1 h-10 w-10 block rounded-md border border-gray-600">
+                    <input type="range" id="overlayOpacity" min="0" max="1" step="0.05" value="0.4" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <span id="opacityValue" class="text-sm font-mono w-10">40%</span>
+                </div>
+            </div>
+
+            <!-- 5. Text Customization -->
+            <div class="space-y-4 border-t pt-4 border-gray-700">
+                <label class="block text-sm font-medium">5. Text Content (Click/Drag on Canvas to Reposition)</label>
+                <textarea id="postText" rows="3" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600" placeholder="Enter your text here...">Your Amazing Quote</textarea>
+                
+                <!-- Text Alignment Control (NEW) -->
+                <div>
+                    <label class="block text-xs font-medium mb-1">Text Alignment</label>
+                    <div class="flex space-x-2">
+                        <button id="alignLeft" data-align="left" class="flex-1 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition duration-150">
+                            <i data-lucide="align-left" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                        <button id="alignCenter" data-align="center" class="flex-1 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition duration-150 toggle-active">
+                            <i data-lucide="align-center" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                        <button id="alignRight" data-align="right" class="flex-1 py-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition duration-150">
+                            <i data-lucide="align-right" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Font Styles (Size, Color) -->
+                <div class="flex space-x-3">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-medium mb-1">Text Color</label>
+                        <input type="color" id="textColor" value="#FFFFFF" class="p-1 h-10 w-full block rounded-md border border-gray-600">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-xs font-medium mb-1">Font Size</label>
+                        <div class="flex items-center space-x-2">
+                            <!-- UPDATED: max="250" -->
+                            <input type="range" id="textSize" value="48" min="10" max="250" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="textSizeValue" class="text-sm font-mono w-10">48px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Font Family and Slant/Weight -->
+                <div class="flex space-x-3">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-medium mb-1">Font Family</label>
+                        <select id="textFont" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600">
+                            <option value="Inter">Inter (Default)</option>
+                            <option value="Roboto">Roboto (Clean Sans)</option>
+                            <option value="Open Sans">Open Sans (Simple)</option>
+                            <option value="Montserrat">Montserrat (Modern Sans)</option>
+                            <option value="Lato">Lato (Balanced Sans)</option>
+                            <option value="Oswald">Oswald (Narrow Header)</option>
+                            <option value="Georgia">Georgia (Serif)</option>
+                            <option value="Playfair Display">Playfair Display (Elegant Serif)</option>
+                            <option value="Merriweather">Merriweather (Classic Serif)</option>
+                            <option value="monospace">Monospace (Code)</option>
+                            <option value="Lobster">Lobster (Fun/Script)</option>
+                            <option value="Pacifico">Pacifico (Handwriting)</option>
+                            <option value="Bebas Neue">Bebas Neue (Header)</option>
+                            <option value="Monoton">Monoton (Display)</option>
+                            <option value="Press Start 2P">Press Start 2P (Pixel)</option>
+                        </select>
+                    </div>
+                    <div class="w-1/2 flex space-x-2 pt-5">
+                        <button id="toggleBold" class="flex-1 py-2 rounded-lg font-bold border border-gray-600 hover:bg-gray-700 transition duration-150" data-active="false">
+                            <i data-lucide="bold" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                        <button id="toggleItalic" class="flex-1 py-2 rounded-lg italic border border-gray-600 hover:bg-gray-700 transition duration-150" data-active="false">
+                            <i data-lucide="italic" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 6. Text Shadow Controls (NEW) -->
+            <div class="space-y-3 border-t pt-4 border-gray-700">
+                <label class="block text-sm font-medium">6. Text Shadow</label>
+                <div class="flex space-x-3">
+                    <div class="w-1/3">
+                        <label class="block text-xs font-medium mb-1">Color</label>
+                        <input type="color" id="shadowColor" value="#000000" class="p-1 h-10 w-full block rounded-md border border-gray-600">
+                    </div>
+                    <div class="w-2/3 space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <label class="block text-xs font-medium w-16">Blur (px)</label>
+                            <input type="range" id="shadowBlur" value="10" min="0" max="30" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="shadowBlurValue" class="text-sm font-mono w-10">10px</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <label class="block text-xs font-medium w-16">Offset X</label>
+                            <input type="range" id="shadowOffsetX" value="3" min="-20" max="20" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="shadowOffsetXValue" class="text-sm font-mono w-10">3px</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <label class="block text-xs font-medium w-16">Offset Y</label>
+                            <input type="range" id="shadowOffsetY" value="3" min="-20" max="20" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="shadowOffsetYValue" class="text-sm font-mono w-10">3px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. AI Content Generator -->
+            <div class="border-t pt-4 border-gray-700 space-y-3">
+                <label class="block text-sm font-medium">7. Generate Text with AI</label>
+                <textarea id="aiPrompt" rows="2" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600" placeholder="e.g., Provide a short, motivational quote about fitness"></textarea>
+                <button id="generateButton" class="w-full py-2 px-4 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition duration-150 flex items-center justify-center disabled:bg-purple-400">
+                    <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i>
+                    Generate Content
+                </button>
+                <div id="aiMessage" class="text-sm text-center text-red-500 hidden"></div>
+            </div>
+            
+            <!-- 8. Border/Frame & Corner Customization -->
+            <div class="border-t pt-4 border-gray-700 space-y-3">
+                <label class="block text-sm font-medium">8. Frame and Corners</label>
+                <div class="flex space-x-3">
+                    <div class="w-1/3">
+                        <label class="block text-xs font-medium mb-1">Corners</label>
+                        <select id="cornerStyle" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600">
+                            <option value="rounded">Rounded</option>
+                            <option value="square">Square</option>
+                        </select>
+                    </div>
+                    <div class="w-1/3">
+                        <label class="block text-xs font-medium mb-1">Border Color</label>
+                        <input type="color" id="borderColor" value="#4A90E2" class="p-1 h-10 w-full block rounded-md border border-gray-600">
+                    </div>
+                    <div class="w-1/3">
+                        <label class="block text-xs font-medium mb-1">Thickness (px)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="borderThickness" value="0" min="0" max="50" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="borderThicknessValue" class="text-sm font-mono w-10">0px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Button -->
+            <div class="pt-4 border-t border-gray-700">
+                <button id="downloadButton" class="w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow-xl hover:bg-blue-700 transition duration-150">
+                    Download Post (PNG)
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Area (Right/Bottom) -->
+        <div class="lg:w-3/5 w-full flex-shrink-0 flex items-center justify-center p-2 h-full overflow-hidden">
+            <div id="canvasWrapper">
+                <canvas id="postCanvas"></canvas>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Simple message box for non-alert messages -->
+    <div id="messageBox" class="fixed bottom-4 right-4 bg-green-500 text-white p-3 rounded-lg shadow-lg hidden transition-opacity duration-300 z-50"></div>
+
+</div>
+
+<script>
+    // Global state variables
+    const state = {
+        canvasWidth: 1080,
+        canvasHeight: 1920,
+        backgroundImage: null,
+        logoImage: null, 
+        overlayColor: '#000000',
+        overlayOpacity: 0.4,
+        textObject: {
+            content: 'Your Amazing Quote',
+            font: 'Inter',
+            size: 48,
+            color: '#FFFFFF',
+            weight: 'normal',
+            style: 'normal',
+            align: 'center', 
+            x: 0,
+            y: 0,
+            isDragging: false,
+            initialX: 0,
+            initialY: 0,
+            offsetX: 0,
+            offsetY: 0,
+            type: 'text' 
+        },
+        logoObject: { 
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+            isDragging: false,
+            offsetX: 0,
+            offsetY: 0,
+            type: 'logo' 
+        },
+        // Which element is currently being dragged
+        activeDragElement: null,
+        // New border/corner properties
+        borderColor: '#4A90E2', 
+        borderThickness: 0,
+        cornerStyle: 'rounded', // 'rounded' or 'square'
+        // NEW: Shadow properties
+        shadowColor: '#000000',
+        shadowBlur: 10,
+        shadowOffsetX: 3,
+        shadowOffsetY: 3,
+        // Constants for AI API
+        apiKey: "AIzaSyDvHVedFwlC-nR7m6z6gAVPnCZkCNABfcs", 
+        apiUrl: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent",
+    };
+
+    // DOM Elements
+    const canvas = document.getElementById('postCanvas');
+    const ctx = canvas.getContext('2d');
+    const imageUpload = document.getElementById('imageUpload');
+    const logoUpload = document.getElementById('logoUpload'); 
+    const platformSelect = document.getElementById('platformSelect');
+    const overlayColor = document.getElementById('overlayColor');
+    const overlayOpacity = document.getElementById('overlayOpacity');
+    const opacityValue = document.getElementById('opacityValue');
+    const postText = document.getElementById('postText');
+    const textColor = document.getElementById('textColor');
+    const textSize = document.getElementById('textSize');
+    const textSizeValue = document.getElementById('textSizeValue');
+    const textFont = document.getElementById('textFont');
+    const generateButton = document.getElementById('generateButton');
+    const aiPrompt = document.getElementById('aiPrompt');
+    const aiMessage = document.getElementById('aiMessage');
+    const downloadButton = document.getElementById('downloadButton');
+    const messageBox = document.getElementById('messageBox');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const toggleBold = document.getElementById('toggleBold');
+    const toggleItalic = document.getElementById('toggleItalic');
+    const borderColorInput = document.getElementById('borderColor');
+    const borderThicknessSlider = document.getElementById('borderThickness');
+    const borderThicknessValueSpan = document.getElementById('borderThicknessValue');
+    const logoSizeSlider = document.getElementById('logoSize'); 
+    const logoSizeValueSpan = document.getElementById('logoSizeValue'); 
+    const logoSizeControl = document.getElementById('logoSizeControl');
+    const cornerStyleSelect = document.getElementById('cornerStyle');
+    const shadowColorInput = document.getElementById('shadowColor');
+    const shadowBlurSlider = document.getElementById('shadowBlur');
+    const shadowBlurValueSpan = document.getElementById('shadowBlurValue');
+    const shadowOffsetXSlider = document.getElementById('shadowOffsetX');
+    const shadowOffsetXValueSpan = document.getElementById('shadowOffsetXValue');
+    const shadowOffsetYSlider = document.getElementById('shadowOffsetY');
+    const shadowOffsetYValueSpan = document.getElementById('shadowOffsetYValue');
+    const alignButtons = [
+        document.getElementById('alignLeft'), 
+        document.getElementById('alignCenter'), 
+        document.getElementById('alignRight')
+    ];
+
+
+    // --- Utility Functions ---
+
+    /**
+     * Shows a temporary message in a custom box.
+     */
+    function showMessage(message, type = 'success') {
+        messageBox.textContent = message;
+        messageBox.className = `fixed bottom-4 right-4 p-3 rounded-lg shadow-lg transition-opacity duration-300 z-50`;
+        
+        if (type === 'error') {
+            messageBox.classList.add('bg-red-500', 'text-white');
+        } else {
+            messageBox.classList.add('bg-green-500', 'text-white');
+        }
+
+        messageBox.classList.remove('hidden');
+        setTimeout(() => {
+            messageBox.classList.add('hidden');
+        }, 3000);
+    }
+
+    /**
+     * Converts a base64 Data URL to a Blob object.
+     */
+    function dataURLtoBlob(dataurl) {
+        const arr = dataurl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], {type: mime});
+    }
+
+
+    /**
+     * Sets the canvas dimensions based on the selected platform ratio.
+     */
+    function setCanvasDimensions() {
+        const selectedOption = platformSelect.options[platformSelect.selectedIndex];
+        state.canvasWidth = parseInt(selectedOption.getAttribute('data-w'), 10);
+        state.canvasHeight = parseInt(selectedOption.getAttribute('data-h'), 10);
+        const [w, h] = selectedOption.value.split(':').map(Number);
+
+        canvas.width = state.canvasWidth;
+        canvas.height = state.canvasHeight;
+        
+        // Reset text position to center of the new canvas size
+        state.textObject.x = state.canvasWidth / 2;
+        state.textObject.y = state.canvasHeight / 2;
+
+        // Apply aspect ratio using a CSS variable on the wrapper.
+        canvasWrapper.style.setProperty('--aspect-ratio', `${w} / ${h}`);
+        
+        // Handle width/height priority for responsive resizing
+        if (w >= h) {
+            canvasWrapper.style.width = '100%';
+            canvasWrapper.style.height = 'auto';
+        } else {
+            canvasWrapper.style.width = 'auto';
+            canvasWrapper.style.height = '100%';
+        }
+        redrawCanvas();
+    }
+    
+    /**
+     * Helper to get the correct x-coordinate based on alignment and line width.
+     * This is crucial for drawing lines in the correct place when align is not 'center'.
+     */
+    function getTextXPosition(text, align, lineMaxWidth) {
+        const textObj = state.textObject;
+        const halfWidth = lineMaxWidth / 2;
+        
+        // x is the center point when dragging. We need to adjust it for left/right alignment.
+        switch (align) {
+            case 'left':
+                // For left align, the drawing starts at x - half the maximum text width.
+                // Text remains left-aligned relative to this calculated point.
+                return textObj.x - halfWidth;
+            case 'right':
+                // For right align, the drawing starts at x + half the maximum text width.
+                // Text remains right-aligned relative to this calculated point.
+                return textObj.x + halfWidth;
+            case 'center':
+            default:
+                return textObj.x;
+        }
+    }
+
+
+    /**
+     * Draws the post content onto the canvas: background image, overlay, and text.
+     */
+    function redrawCanvas() {
+        // Clear the canvas
+        ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
+
+        // 1. Draw Background Image
+        if (state.backgroundImage) {
+            // Ensure the image covers the entire canvas area (like background-size: cover)
+            const img = state.backgroundImage;
+            const hRatio = state.canvasWidth / img.width;
+            const vRatio = state.canvasHeight / img.height;
+            const ratio = Math.max(hRatio, vRatio); // Use the larger ratio to cover
+            const centerShiftX = (state.canvasWidth - img.width * ratio) / 2;
+            const centerShiftY = (state.canvasHeight - img.height * ratio) / 2;
+            ctx.drawImage(img, 0, 0, img.width, img.height, // Source rectangle
+                          centerShiftX, centerShiftY, img.width * ratio, img.height * ratio // Destination rectangle
+            );
+        } else {
+            // Fallback for no image
+            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--color-card-bg');
+            ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+        }
+
+        // 2. Draw Color Overlay
+        ctx.fillStyle = state.overlayColor;
+        ctx.globalAlpha = state.overlayOpacity;
+        ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+        ctx.globalAlpha = 1.0; // Reset opacity
+
+        // 3. Draw Logo Image
+        if (state.logoImage) {
+            const logo = state.logoImage;
+            const logoObj = state.logoObject;
+            // To allow for easier drag calculation, we draw the logo from its top-left corner (x, y)
+            ctx.drawImage(logo, logoObj.x, logoObj.y, logoObj.width, logoObj.height);
+        }
+
+        // 4. Draw Text
+        const textObj = state.textObject;
+        ctx.fillStyle = textObj.color;
+        // Use new weight and style properties
+        ctx.font = `${textObj.style} ${textObj.weight} ${textObj.size}px ${textObj.font}, sans-serif`;
+        
+        // Set alignment property from state
+        // When alignment is left/right, text is aligned against the boundary.
+        // When alignment is center, text is aligned against the textObject.x (center of the text block).
+        ctx.textAlign = textObj.align; 
+        ctx.textBaseline = 'middle';
+
+        // Split text into lines to wrap and draw. Max width is 80% of canvas width.
+        const lineMaxWidth = state.canvasWidth * 0.8;
+        const lines = wrapText(ctx, textObj.content, lineMaxWidth);
+        const lineSpacing = textObj.size * 1.2;
+        const startY = textObj.y - (lines.length - 1) * lineSpacing / 2;
+
+        // Set shadow properties
+        ctx.shadowColor = state.shadowColor;
+        ctx.shadowBlur = state.shadowBlur;
+        ctx.shadowOffsetX = state.shadowOffsetX;
+        ctx.shadowOffsetY = state.shadowOffsetY;
+        
+        // Get the correct starting X position based on alignment
+        const startX = getTextXPosition(lines[0] || '', textObj.align, lineMaxWidth);
+
+        lines.forEach((line, index) => {
+            const yPos = startY + index * lineSpacing;
+            ctx.fillText(line, startX, yPos);
+        });
+
+        // Clear shadow for next draw calls
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+
+        // 5. Draw Border/Frame (must be last)
+        const borderThickness = state.borderThickness;
+        if (borderThickness > 0) {
+            ctx.strokeStyle = state.borderColor;
+            ctx.lineWidth = borderThickness;
+            // Draw a rectangle inset by half the line width so the line is fully inside the canvas.
+            const inset = borderThickness / 2;
+            ctx.strokeRect(inset, inset, state.canvasWidth - borderThickness, state.canvasHeight - borderThickness);
+        }
+    }
+
+    /**
+     * Splits text into lines to fit within a maximum width.
+     */
+    function wrapText(ctx, text, maxWidth) {
+        const words = text.split(' ');
+        let lines = [];
+        let currentLine = words[0] || '';
+
+        for (let i = 1; i < words.length; i++) {
+            const word = words[i];
+            // Measure text using the current font settings in the context
+            const testLine = currentLine + ' ' + word;
+            const metrics = ctx.measureText(testLine);
+            const testWidth = metrics.width;
+
+            if (testWidth > maxWidth && i > 0) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        lines.push(currentLine);
+        return lines;
+    }
+
+    /**
+     * Converts a screen coordinate (e.g., from a mouse event) to a canvas coordinate.
+     */
+    function getCanvasCoords(screenX, screenY) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (screenX - rect.left) * scaleX,
+            y: (screenY - rect.top) * scaleY
+        };
+    }
+
+    /**
+     * Checks if the given canvas coordinates are over the text object or logo object.
+     */
+    function getDraggableElement(canvasX, canvasY) {
+        const textObj = state.textObject;
+        const logoObj = state.logoObject;
+        
+        // --- Check Logo ---
+        if (state.logoImage) {
+            // Check if coordinates are within the logo's bounding box
+            if (canvasX >= logoObj.x && canvasX <= logoObj.x + logoObj.width &&
+                canvasY >= logoObj.y && canvasY <= logoObj.y + logoObj.height) {
+                return logoObj;
+            }
+        }
+
+        // --- Check Text (Approximate bounding box) ---
+        // Since text is multi-line, we use an approximation based on max width/height
+        const maxTextWidth = state.canvasWidth * 0.8; 
+        ctx.font = `${textObj.style} ${textObj.weight} ${textObj.size}px ${textObj.font}, sans-serif`;
+        const lines = wrapText(ctx, textObj.content, maxTextWidth);
+        const textHeight = lines.length * textObj.size * 1.2;
+
+        const leftBound = textObj.x - maxTextWidth / 2;
+        const rightBound = textObj.x + maxTextWidth / 2;
+        const topBound = textObj.y - textHeight / 2;
+        const bottomBound = textObj.y + textHeight / 2;
+
+        if (canvasX >= leftBound && canvasX <= rightBound &&
+            canvasY >= topBound && canvasY <= bottomBound) {
+            return textObj;
+        }
+
+        return null;
+    }
+
+    // --- Drag and Drop Logic ---
+
+    function handleDragStart(e) {
+        e.preventDefault(); 
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const coords = getCanvasCoords(clientX, clientY);
+
+        const element = getDraggableElement(coords.x, coords.y);
+
+        if (element) {
+            state.activeDragElement = element;
+            element.isDragging = true;
+            element.offsetX = coords.x - element.x;
+            element.offsetY = coords.y - element.y;
+            canvas.style.cursor = 'grabbing';
+        }
+    }
+
+    function handleDrag(e) {
+        if (!state.activeDragElement || !state.activeDragElement.isDragging) return;
+        e.preventDefault(); 
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const coords = getCanvasCoords(clientX, clientY);
+
+        const element = state.activeDragElement;
+        const newX = coords.x - element.offsetX;
+        const newY = coords.y - element.offsetY;
+
+        // Boundaries: Keep element within the canvas with a small margin
+        const marginX = 20;
+        const marginY = 20;
+
+        if (element.type === 'text') {
+            // Text drag uses center-point, so just clamp the center point
+            element.x = Math.max(marginX, Math.min(state.canvasWidth - marginX, newX));
+            element.y = Math.max(marginY, Math.min(state.canvasHeight - marginY, newY));
+        } else if (element.type === 'logo') {
+            // Logo drag uses top-left corner
+            element.x = Math.max(marginX, Math.min(state.canvasWidth - element.width - marginX, newX));
+            element.y = Math.max(marginY, Math.min(state.canvasHeight - element.height - marginY, newY));
+        }
+        
+        redrawCanvas();
+    }
+
+    function handleDragEnd() {
+        if (state.activeDragElement) {
+            state.activeDragElement.isDragging = false;
+            state.activeDragElement = null;
+            canvas.style.cursor = 'default';
+        }
+    }
+    
+    // Update cursor style on mouse move to indicate draggable elements
+    canvas.addEventListener('mousemove', (e) => {
+        if (state.activeDragElement && state.activeDragElement.isDragging) return;
+
+        const coords = getCanvasCoords(e.clientX, e.clientY);
+        if (getDraggableElement(coords.x, coords.y)) {
+            canvas.style.cursor = 'grab';
+        } else {
+            canvas.style.cursor = 'default';
+        }
+    });
+
+    // Attach mouse/touch event listeners
+    canvas.addEventListener('mousedown', handleDragStart);
+    canvas.addEventListener('mouseup', handleDragEnd);
+    canvas.addEventListener('mouseleave', handleDragEnd); 
+
+    canvas.addEventListener('mousemove', handleDrag);
+    canvas.addEventListener('touchmove', handleDrag, { passive: false });
+    canvas.addEventListener('touchstart', handleDragStart, { passive: false });
+    canvas.addEventListener('touchend', handleDragEnd);
+
+
+    // --- AI Content Generation ---
+
+    async function generateAiContent() {
+        const prompt = aiPrompt.value.trim();
+        if (!prompt) {
+            showMessage("Please enter a prompt for the AI.", 'error');
+            return;
+        }
+
+        generateButton.disabled = true;
+        generateButton.innerHTML = `<i data-lucide="loader" class="w-5 h-5 mr-2 animate-spin"></i> Generating...`;
+        aiMessage.classList.add('hidden'); // Hide previous error messages
+        
+        try {
+            // Construct the API URL, including the key if it's set (it's empty here, so the runtime handles it)
+            const url = state.apiKey ? `${state.apiUrl}?key=${state.apiKey}` : state.apiUrl;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "You are a creative text generator for social media posts. Respond with a concise, single quote or short phrase (under 15 words) based on the user's prompt. Do not include any introductory or concluding remarks." }]
+                },
+            };
+
+            // Implementation of exponential backoff for API calls
+            let response;
+            const MAX_RETRIES = 5;
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) break; // Success! Exit loop
+
+                    if (response.status === 429 || response.status >= 500) {
+                        // Retry for rate limiting (429) or server errors (5xx)
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        if (i < MAX_RETRIES - 1) {
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                    } else {
+                        // Non-retryable error (e.g., 400 Bad Request)
+                        break; 
+                    }
+                } catch (fetchError) {
+                    console.error('Fetch attempt failed:', fetchError);
+                    if (i < MAX_RETRIES - 1) {
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw fetchError; // Re-throw the error on final attempt
+                    }
+                }
+            }
+
+
+            if (!response || !response.ok) {
+                // Read the response body for detailed error information
+                const errorBody = await (response ? response.text() : 'No response received.');
+                console.error('API Error Response:', response ? response.status : 'Unknown', errorBody);
+                // Throw an error with status and body
+                throw new Error(`API returned status ${response ? response.status : 'Unknown'}: ${errorBody.substring(0, 100)}...`);
+            }
+
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Could not generate quote.";
+            
+            state.textObject.content = text.replace(/["“”]/g, ''); // Remove quotes
+            postText.value = state.textObject.content;
+            redrawCanvas();
+            lucide.createIcons();
+            showMessage("Content generated successfully!");
+
+        } catch (error) {
+            console.error('AI generation failed:', error);
+            aiMessage.textContent = `Error: Failed to generate content. Check the console for API details.`;
+            aiMessage.classList.remove('hidden');
+            showMessage("AI generation failed. See error log.", 'error');
+        } finally {
+            generateButton.disabled = false;
+            generateButton.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Content`;
+            lucide.createIcons(); // Re-render Lucide icons
+        }
+    }
+
+
+    // --- Event Listeners and Initialization ---
+
+    function setupEventListeners() {
+        // Set up initial dimensions
+        setCanvasDimensions(); 
+
+        // 1. Platform Select
+        platformSelect.addEventListener('change', setCanvasDimensions);
+
+        // 2. Background Image Upload
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.backgroundImage = img;
+                        redrawCanvas();
+                    };
+                    // Fallback placeholder in case of load error (though not expected for local files)
+                    img.onerror = () => {
+                        console.error("Error loading image file.");
+                        state.backgroundImage = null;
+                        redrawCanvas();
+                        showMessage("Error loading image.", 'error');
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 3. Logo Image Upload & Size Control
+        logoUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.logoImage = img;
+                        logoSizeControl.style.display = 'flex'; // Show size control
+                        // Set default logo size based on a percentage of canvas width
+                        const canvasFraction = 0.15;
+                        const defaultWidth = Math.min(img.width, state.canvasWidth * canvasFraction); 
+                        state.logoObject.width = defaultWidth;
+                        state.logoObject.height = (img.height / img.width) * defaultWidth;
+                        // Center logo horizontally and place near bottom
+                        state.logoObject.x = state.canvasWidth / 2 - state.logoObject.width / 2;
+                        state.logoObject.y = state.canvasHeight - state.logoObject.height - 50; 
+                        logoSizeSlider.value = 100; // Reset slider to default center
+                        logoSizeValueSpan.textContent = '1.00x'; // Display scale factor
+                        redrawCanvas();
+                    };
+                    img.onerror = () => {
+                        console.error("Error loading logo file.");
+                        state.logoImage = null;
+                        logoSizeControl.style.display = 'none';
+                        redrawCanvas();
+                        showMessage("Error loading logo.", 'error');
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                state.logoImage = null;
+                logoSizeControl.style.display = 'none';
+                redrawCanvas();
+            }
+        });
+
+        // 4. Color Overlay
+        overlayColor.addEventListener('input', (e) => {
+            state.overlayColor = e.target.value;
+            redrawCanvas();
+        });
+        overlayOpacity.addEventListener('input', (e) => {
+            state.overlayOpacity = parseFloat(e.target.value);
+            opacityValue.textContent = `${Math.round(state.overlayOpacity * 100)}%`;
+            redrawCanvas();
+        });
+
+        // 5. Text Customization (Content, Color, Size, Font)
+        postText.addEventListener('input', (e) => {
+            state.textObject.content = e.target.value;
+            redrawCanvas();
+        });
+        textColor.addEventListener('input', (e) => {
+            state.textObject.color = e.target.value;
+            redrawCanvas();
+        });
+        // UPDATED: No change needed here, just ensures the max value is handled
+        textSize.addEventListener('input', (e) => {
+            state.textObject.size = parseInt(e.target.value, 10);
+            textSizeValue.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+        textFont.addEventListener('change', (e) => {
+            state.textObject.font = e.target.value;
+            // When font changes, recalculate text position to keep it visually centered
+            state.textObject.x = state.canvasWidth / 2;
+            redrawCanvas();
+        });
+
+        // Toggle Bold/Italic
+        toggleBold.addEventListener('click', (e) => {
+            const isActive = toggleBold.getAttribute('data-active') === 'true';
+            state.textObject.weight = isActive ? 'normal' : 'bold';
+            toggleBold.setAttribute('data-active', !isActive);
+            toggleBold.classList.toggle('toggle-active', !isActive);
+            redrawCanvas();
+        });
+        toggleItalic.addEventListener('click', (e) => {
+            const isActive = toggleItalic.getAttribute('data-active') === 'true';
+            state.textObject.style = isActive ? 'normal' : 'italic';
+            toggleItalic.setAttribute('data-active', !isActive);
+            toggleItalic.classList.toggle('toggle-active', !isActive);
+            redrawCanvas();
+        });
+        
+        // Text Alignment Buttons
+        alignButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const align = button.getAttribute('data-align');
+                state.textObject.align = align;
+                alignButtons.forEach(btn => btn.classList.remove('toggle-active'));
+                button.classList.add('toggle-active');
+                redrawCanvas();
+            });
+        });
+
+        // 6. AI Content Generator
+        generateButton.addEventListener('click', generateAiContent);
+
+        // 7. Border/Frame Customization
+        borderColorInput.addEventListener('input', (e) => {
+            state.borderColor = e.target.value;
+            redrawCanvas();
+        });
+        borderThicknessSlider.addEventListener('input', (e) => {
+            state.borderThickness = parseInt(e.target.value, 10);
+            borderThicknessValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+        
+        // Corner Style Select
+        cornerStyleSelect.addEventListener('change', (e) => {
+            state.cornerStyle = e.target.value;
+            const radius = state.cornerStyle === 'rounded' ? '0.5rem' : '0px';
+            canvas.style.setProperty('--canvas-border-radius', radius);
+            redrawCanvas();
+        });
+
+        // Shadow Controls
+        shadowColorInput.addEventListener('input', (e) => {
+            state.shadowColor = e.target.value;
+            redrawCanvas();
+        });
+        shadowBlurSlider.addEventListener('input', (e) => {
+            state.shadowBlur = parseInt(e.target.value, 10);
+            shadowBlurValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+        shadowOffsetXSlider.addEventListener('input', (e) => {
+            state.shadowOffsetX = parseInt(e.target.value, 10);
+            shadowOffsetXValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+        shadowOffsetYSlider.addEventListener('input', (e) => {
+            state.shadowOffsetY = parseInt(e.target.value, 10);
+            shadowOffsetYValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+
+        // Download Button
+        downloadButton.addEventListener('click', () => {
+            // Get the image data URL
+            const imageURL = canvas.toDataURL('image/png');
+
+            // Convert to blob and create a download link
+            const blob = dataURLtoBlob(imageURL);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'social_post_by_ai.png'; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            showMessage("Post downloaded successfully!");
+        });
+
+        // Logo Size Slider
+        logoSizeSlider.addEventListener('input', (e) => {
+            const scaleFactor = parseInt(e.target.value, 10) / 100;
+            logoSizeValueSpan.textContent = `${scaleFactor.toFixed(2)}x`; // Display scale factor
+
+            if (state.logoImage) {
+                // Calculate new size based on original image dimensions
+                const originalWidth = state.logoImage.width;
+                const originalHeight = state.logoImage.height;
+                const canvasFraction = 0.15; // The base size is 15% of the canvas width
+
+                // Calculate the original size used when the image was loaded (scaleFactor 1.0)
+                const baseWidth = Math.min(originalWidth, state.canvasWidth * canvasFraction);
+                const baseHeight = (originalHeight / originalWidth) * baseWidth;
+                
+                // Apply the slider scale factor to the base size
+                state.logoObject.width = baseWidth * scaleFactor;
+                state.logoObject.height = baseHeight * scaleFactor;
+
+                // Keep logo centered relative to its current position (center of the logo)
+                const centerX = state.logoObject.x + state.logoObject.width / 2;
+                const centerY = state.logoObject.y + state.logoObject.height / 2;
+                
+                state.logoObject.x = centerX - state.logoObject.width / 2;
+                state.logoObject.y = centerY - state.logoObject.height / 2;
+
+                redrawCanvas();
+            }
+        });
+        
+        // Initial setup for Lucide icons
+        lucide.createIcons();
+    }
+
+    // Call setup function on window load
+    window.onload = setupEventListeners;
+
+</script>
+</body>
+</html>
