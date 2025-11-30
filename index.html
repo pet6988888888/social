@@ -90,7 +90,6 @@
 
     </style>
     <!-- Load extra Google Fonts for wider selection -->
-    <!-- Expanded list of fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Monoton&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -141,7 +140,7 @@
                 <div id="logoSizeControl" class="flex items-center space-x-2 mt-3" style="display: none;">
                     <label class="block text-xs font-medium w-20">Logo Size</label>
                     <input type="range" id="logoSize" value="100" min="20" max="300" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                    <span id="logoSizeValue" class="text-sm font-mono w-10">100px</span>
+                    <span id="logoSizeValue" class="text-sm font-mono w-10">1.00x</span>
                 </div>
             </div>
 
@@ -158,9 +157,10 @@
             <!-- 5. Text Customization -->
             <div class="space-y-4 border-t pt-4 border-gray-700">
                 <label class="block text-sm font-medium">5. Text Content (Click/Drag on Canvas to Reposition)</label>
-                <textarea id="postText" rows="3" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600" placeholder="Enter your text here...">Your Amazing Quote</textarea>
+                <!-- NOTE: Rows changed to 5 to allow for easier line break input -->
+                <textarea id="postText" rows="5" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600" placeholder="Enter your text here...">Your Amazing Quote</textarea>
                 
-                <!-- Text Alignment Control (NEW) -->
+                <!-- Text Alignment Control -->
                 <div>
                     <label class="block text-xs font-medium mb-1">Text Alignment</label>
                     <div class="flex space-x-2">
@@ -185,7 +185,7 @@
                     <div class="w-1/2">
                         <label class="block text-xs font-medium mb-1">Font Size</label>
                         <div class="flex items-center space-x-2">
-                            <!-- UPDATED: max="250" -->
+                            <!-- MAX INCREASED TO 250 -->
                             <input type="range" id="textSize" value="48" min="10" max="250" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
                             <span id="textSizeValue" class="text-sm font-mono w-10">48px</span>
                         </div>
@@ -224,10 +224,40 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- 6. Text Shadow Controls (NEW) -->
+
+            <!-- 6. Text Background/Highlight Box (NEW SECTION) -->
             <div class="space-y-3 border-t pt-4 border-gray-700">
-                <label class="block text-sm font-medium">6. Text Shadow</label>
+                <label class="block text-sm font-medium">6. Text Background/Highlight Box</label>
+                <div class="flex items-center space-x-4">
+                    <input type="checkbox" id="enableTextBg" class="h-4 w-4 text-indigo-600 rounded border-gray-600 focus:ring-indigo-500">
+                    <label for="enableTextBg" class="text-sm">Enable Background Box</label>
+                </div>
+                
+                <div id="textBgControls" class="space-y-3 pl-6 opacity-50 pointer-events-none">
+                    <div class="flex space-x-3 items-center">
+                        <label class="block text-xs font-medium w-24">Box Color</label>
+                        <input type="color" id="textBgColor" value="#000000" class="p-1 h-10 w-10 block rounded-md border border-gray-600">
+                        <input type="range" id="textBgOpacity" min="0" max="1" step="0.05" value="0.5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <span id="textBgOpacityValue" class="text-sm font-mono w-10">50%</span>
+                    </div>
+                    <div class="flex space-x-3">
+                        <div class="w-1/2 flex items-center space-x-2">
+                            <label class="block text-xs font-medium w-16">Padding</label>
+                            <input type="range" id="textBgPadding" value="20" min="0" max="100" step="5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="textBgPaddingValue" class="text-sm font-mono w-10">20px</span>
+                        </div>
+                        <div class="w-1/2 flex items-center space-x-2">
+                            <label class="block text-xs font-medium w-16">Radius</label>
+                            <input type="range" id="textBgRadius" value="10" min="0" max="50" step="5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <span id="textBgRadiusValue" class="text-sm font-mono w-10">10px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Text Shadow Controls -->
+            <div class="space-y-3 border-t pt-4 border-gray-700">
+                <label class="block text-sm font-medium">7. Text Shadow</label>
                 <div class="flex space-x-3">
                     <div class="w-1/3">
                         <label class="block text-xs font-medium mb-1">Color</label>
@@ -253,9 +283,9 @@
                 </div>
             </div>
 
-            <!-- 7. AI Content Generator -->
+            <!-- 8. AI Content Generator -->
             <div class="border-t pt-4 border-gray-700 space-y-3">
-                <label class="block text-sm font-medium">7. Generate Text with AI</label>
+                <label class="block text-sm font-medium">8. Generate Text with AI</label>
                 <textarea id="aiPrompt" rows="2" class="w-full p-2 border rounded-lg bg-gray-800 border-gray-600" placeholder="e.g., Provide a short, motivational quote about fitness"></textarea>
                 <button id="generateButton" class="w-full py-2 px-4 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition duration-150 flex items-center justify-center disabled:bg-purple-400">
                     <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i>
@@ -264,9 +294,9 @@
                 <div id="aiMessage" class="text-sm text-center text-red-500 hidden"></div>
             </div>
             
-            <!-- 8. Border/Frame & Corner Customization -->
+            <!-- 9. Border/Frame & Corner Customization -->
             <div class="border-t pt-4 border-gray-700 space-y-3">
-                <label class="block text-sm font-medium">8. Frame and Corners</label>
+                <label class="block text-sm font-medium">9. Frame and Corners</label>
                 <div class="flex space-x-3">
                     <div class="w-1/3">
                         <label class="block text-xs font-medium mb-1">Corners</label>
@@ -347,19 +377,27 @@
             offsetY: 0,
             type: 'logo' 
         },
+        // NEW: Text Background Properties
+        textBg: {
+            enabled: false,
+            color: '#000000',
+            opacity: 0.5,
+            padding: 20, // Padding around the text block
+            radius: 10 // Corner radius of the background box
+        },
         // Which element is currently being dragged
         activeDragElement: null,
         // New border/corner properties
         borderColor: '#4A90E2', 
         borderThickness: 0,
         cornerStyle: 'rounded', // 'rounded' or 'square'
-        // NEW: Shadow properties
+        // Shadow properties
         shadowColor: '#000000',
         shadowBlur: 10,
         shadowOffsetX: 3,
         shadowOffsetY: 3,
         // Constants for AI API
-        apiKey: "AIzaSyDvHVedFwlC-nR7m6z6gAVPnCZkCNABfcs", 
+        apiKey: "AIzaSyBQq5bgZ09uP8hiFDBE_jF1htJc-nZr7Ug", 
         apiUrl: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent",
     };
 
@@ -404,6 +442,17 @@
         document.getElementById('alignCenter'), 
         document.getElementById('alignRight')
     ];
+    
+    // NEW Text Background DOM Elements
+    const enableTextBgCheckbox = document.getElementById('enableTextBg');
+    const textBgControlsDiv = document.getElementById('textBgControls');
+    const textBgColorInput = document.getElementById('textBgColor');
+    const textBgOpacitySlider = document.getElementById('textBgOpacity');
+    const textBgOpacityValueSpan = document.getElementById('textBgOpacityValue');
+    const textBgPaddingSlider = document.getElementById('textBgPadding');
+    const textBgPaddingValueSpan = document.getElementById('textBgPaddingValue');
+    const textBgRadiusSlider = document.getElementById('textBgRadius');
+    const textBgRadiusValueSpan = document.getElementById('textBgRadiusValue');
 
 
     // --- Utility Functions ---
@@ -476,26 +525,122 @@
     
     /**
      * Helper to get the correct x-coordinate based on alignment and line width.
-     * This is crucial for drawing lines in the correct place when align is not 'center'.
      */
-    function getTextXPosition(text, align, lineMaxWidth) {
-        const textObj = state.textObject;
+    function getTextXPosition(align, lineMaxWidth, textObjX) {
+        // textObjX is the center point when dragging. We need to adjust it for left/right alignment.
         const halfWidth = lineMaxWidth / 2;
         
-        // x is the center point when dragging. We need to adjust it for left/right alignment.
         switch (align) {
             case 'left':
                 // For left align, the drawing starts at x - half the maximum text width.
-                // Text remains left-aligned relative to this calculated point.
-                return textObj.x - halfWidth;
+                return textObjX - halfWidth;
             case 'right':
                 // For right align, the drawing starts at x + half the maximum text width.
-                // Text remains right-aligned relative to this calculated point.
-                return textObj.x + halfWidth;
+                return textObjX + halfWidth;
             case 'center':
             default:
-                return textObj.x;
+                return textObjX;
         }
+    }
+
+
+    /**
+     * Splits text into lines to fit within a maximum width and honors manual line breaks (\n).
+     * Returns an array of lines, including empty strings for manual double line breaks.
+     */
+    function wrapText(ctx, text, maxWidth) {
+        const paragraphs = text.split('\n'); // First, split by manual line breaks
+        let lines = [];
+
+        ctx.font = `${state.textObject.style} ${state.textObject.weight} ${state.textObject.size}px ${state.textObject.font}, sans-serif`;
+
+        paragraphs.forEach(paragraph => {
+            if (paragraph.trim() === '') {
+                // If it's an empty line (manual double break), push an empty string
+                lines.push('');
+                return;
+            }
+
+            const words = paragraph.split(' ');
+            let currentLine = words[0] || '';
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const testLine = currentLine + ' ' + word;
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+
+                if (testWidth > maxWidth && i > 0) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+        });
+
+        return lines;
+    }
+    
+    /**
+     * Calculates the bounding box of the multi-line text block, including padding.
+     * Returns {x, y, width, height, startY} in canvas coordinates.
+     */
+    function calculateTextBounds(lines, lineMaxWidth, lineSpacing) {
+        const textObj = state.textObject;
+        const padding = state.textBg.padding;
+        
+        // Max measured width (used for the box)
+        let actualMaxWidth = 0;
+        ctx.font = `${textObj.style} ${textObj.weight} ${textObj.size}px ${textObj.font}, sans-serif`;
+        lines.forEach(line => {
+            const width = ctx.measureText(line).width;
+            if (width > actualMaxWidth) {
+                actualMaxWidth = width;
+            }
+        });
+        
+        const textHeight = lines.length * lineSpacing;
+        
+        // Text drawing starts at startY (center-aligned vertically)
+        const startY = textObj.y - (textHeight - lineSpacing) / 2; 
+
+        // Box width and height, incorporating padding
+        const boxWidth = actualMaxWidth + 2 * padding;
+        const boxHeight = textHeight + 2 * padding;
+
+        // Box top-left corner coordinates (relative to the text center point x,y)
+        const boxX = textObj.x - boxWidth / 2;
+        const boxY = startY - padding;
+        
+        return {
+            x: boxX,
+            y: boxY,
+            width: boxWidth,
+            height: boxHeight,
+            textDrawY: startY 
+        };
+    }
+
+    /**
+     * Draws a rounded rectangle.
+     */
+    function roundRect(ctx, x, y, width, height, radius) {
+        if (width < 2 * radius) radius = width / 2;
+        if (height < 2 * radius) radius = height / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.arcTo(x + width, y, x + width, y + radius, radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        ctx.lineTo(x + radius, y + height);
+        ctx.arcTo(x, y + height, x, y + height - radius, radius);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + radius, y, radius);
+        ctx.closePath();
+        ctx.fill();
     }
 
 
@@ -508,15 +653,14 @@
 
         // 1. Draw Background Image
         if (state.backgroundImage) {
-            // Ensure the image covers the entire canvas area (like background-size: cover)
             const img = state.backgroundImage;
             const hRatio = state.canvasWidth / img.width;
             const vRatio = state.canvasHeight / img.height;
-            const ratio = Math.max(hRatio, vRatio); // Use the larger ratio to cover
+            const ratio = Math.max(hRatio, vRatio); 
             const centerShiftX = (state.canvasWidth - img.width * ratio) / 2;
             const centerShiftY = (state.canvasHeight - img.height * ratio) / 2;
-            ctx.drawImage(img, 0, 0, img.width, img.height, // Source rectangle
-                          centerShiftX, centerShiftY, img.width * ratio, img.height * ratio // Destination rectangle
+            ctx.drawImage(img, 0, 0, img.width, img.height, 
+                          centerShiftX, centerShiftY, img.width * ratio, img.height * ratio 
             );
         } else {
             // Fallback for no image
@@ -530,31 +674,44 @@
         ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
         ctx.globalAlpha = 1.0; // Reset opacity
 
-        // 3. Draw Logo Image
-        if (state.logoImage) {
-            const logo = state.logoImage;
-            const logoObj = state.logoObject;
-            // To allow for easier drag calculation, we draw the logo from its top-left corner (x, y)
-            ctx.drawImage(logo, logoObj.x, logoObj.y, logoObj.width, logoObj.height);
-        }
-
-        // 4. Draw Text
+        // 3. Prepare Text Metrics
         const textObj = state.textObject;
-        ctx.fillStyle = textObj.color;
-        // Use new weight and style properties
         ctx.font = `${textObj.style} ${textObj.weight} ${textObj.size}px ${textObj.font}, sans-serif`;
-        
-        // Set alignment property from state
-        // When alignment is left/right, text is aligned against the boundary.
-        // When alignment is center, text is aligned against the textObject.x (center of the text block).
-        ctx.textAlign = textObj.align; 
-        ctx.textBaseline = 'middle';
-
-        // Split text into lines to wrap and draw. Max width is 80% of canvas width.
         const lineMaxWidth = state.canvasWidth * 0.8;
         const lines = wrapText(ctx, textObj.content, lineMaxWidth);
         const lineSpacing = textObj.size * 1.2;
-        const startY = textObj.y - (lines.length - 1) * lineSpacing / 2;
+        
+        // Calculate the bounding box for the entire text block
+        const bounds = calculateTextBounds(lines, lineMaxWidth, lineSpacing);
+        
+        // 4. Draw Text Background Box (NEW)
+        if (state.textBg.enabled) {
+            ctx.globalAlpha = state.textBg.opacity;
+            ctx.fillStyle = state.textBg.color;
+            
+            roundRect(
+                ctx,
+                bounds.x,
+                bounds.y,
+                bounds.width,
+                bounds.height,
+                state.textBg.radius
+            );
+            
+            ctx.globalAlpha = 1.0; // Reset opacity
+        }
+
+        // 5. Draw Logo Image
+        if (state.logoImage) {
+            const logo = state.logoImage;
+            const logoObj = state.logoObject;
+            ctx.drawImage(logo, logoObj.x, logoObj.y, logoObj.width, logoObj.height);
+        }
+
+        // 6. Draw Text
+        ctx.fillStyle = textObj.color;
+        ctx.textAlign = textObj.align; 
+        ctx.textBaseline = 'middle';
 
         // Set shadow properties
         ctx.shadowColor = state.shadowColor;
@@ -563,10 +720,10 @@
         ctx.shadowOffsetY = state.shadowOffsetY;
         
         // Get the correct starting X position based on alignment
-        const startX = getTextXPosition(lines[0] || '', textObj.align, lineMaxWidth);
+        const startX = getTextXPosition(textObj.align, lineMaxWidth, textObj.x);
 
         lines.forEach((line, index) => {
-            const yPos = startY + index * lineSpacing;
+            const yPos = bounds.textDrawY + index * lineSpacing;
             ctx.fillText(line, startX, yPos);
         });
 
@@ -577,7 +734,7 @@
         ctx.shadowOffsetY = 0;
 
 
-        // 5. Draw Border/Frame (must be last)
+        // 7. Draw Border/Frame (must be last)
         const borderThickness = state.borderThickness;
         if (borderThickness > 0) {
             ctx.strokeStyle = state.borderColor;
@@ -588,31 +745,6 @@
         }
     }
 
-    /**
-     * Splits text into lines to fit within a maximum width.
-     */
-    function wrapText(ctx, text, maxWidth) {
-        const words = text.split(' ');
-        let lines = [];
-        let currentLine = words[0] || '';
-
-        for (let i = 1; i < words.length; i++) {
-            const word = words[i];
-            // Measure text using the current font settings in the context
-            const testLine = currentLine + ' ' + word;
-            const metrics = ctx.measureText(testLine);
-            const testWidth = metrics.width;
-
-            if (testWidth > maxWidth && i > 0) {
-                lines.push(currentLine);
-                currentLine = word;
-            } else {
-                currentLine = testLine;
-            }
-        }
-        lines.push(currentLine);
-        return lines;
-    }
 
     /**
      * Converts a screen coordinate (e.g., from a mouse event) to a canvas coordinate.
@@ -643,17 +775,19 @@
             }
         }
 
-        // --- Check Text (Approximate bounding box) ---
-        // Since text is multi-line, we use an approximation based on max width/height
-        const maxTextWidth = state.canvasWidth * 0.8; 
+        // --- Check Text (Using bounding box calculation) ---
+        // Need to calculate the current text bounds first
         ctx.font = `${textObj.style} ${textObj.weight} ${textObj.size}px ${textObj.font}, sans-serif`;
-        const lines = wrapText(ctx, textObj.content, maxTextWidth);
-        const textHeight = lines.length * textObj.size * 1.2;
+        const lineMaxWidth = state.canvasWidth * 0.8;
+        const lines = wrapText(ctx, textObj.content, lineMaxWidth);
+        const lineSpacing = textObj.size * 1.2;
+        const bounds = calculateTextBounds(lines, lineMaxWidth, lineSpacing);
+        const padding = state.textBg.enabled ? state.textBg.padding : 0; // Use padding if box is enabled
 
-        const leftBound = textObj.x - maxTextWidth / 2;
-        const rightBound = textObj.x + maxTextWidth / 2;
-        const topBound = textObj.y - textHeight / 2;
-        const bottomBound = textObj.y + textHeight / 2;
+        const leftBound = bounds.x - padding;
+        const rightBound = bounds.x + bounds.width + padding;
+        const topBound = bounds.y - padding;
+        const bottomBound = bounds.y + bounds.height + padding;
 
         if (canvasX >= leftBound && canvasX <= rightBound &&
             canvasY >= topBound && canvasY <= bottomBound) {
@@ -756,7 +890,6 @@
         aiMessage.classList.add('hidden'); // Hide previous error messages
         
         try {
-            // Construct the API URL, including the key if it's set (it's empty here, so the runtime handles it)
             const url = state.apiKey ? `${state.apiUrl}?key=${state.apiKey}` : state.apiUrl;
 
             const payload = {
@@ -780,13 +913,11 @@
                     if (response.ok) break; // Success! Exit loop
 
                     if (response.status === 429 || response.status >= 500) {
-                        // Retry for rate limiting (429) or server errors (5xx)
                         const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
                         if (i < MAX_RETRIES - 1) {
                             await new Promise(resolve => setTimeout(resolve, delay));
                         }
                     } else {
-                        // Non-retryable error (e.g., 400 Bad Request)
                         break; 
                     }
                 } catch (fetchError) {
@@ -795,17 +926,15 @@
                         const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
                         await new Promise(resolve => setTimeout(resolve, delay));
                     } else {
-                        throw fetchError; // Re-throw the error on final attempt
+                        throw fetchError; 
                     }
                 }
             }
 
 
             if (!response || !response.ok) {
-                // Read the response body for detailed error information
                 const errorBody = await (response ? response.text() : 'No response received.');
                 console.error('API Error Response:', response ? response.status : 'Unknown', errorBody);
-                // Throw an error with status and body
                 throw new Error(`API returned status ${response ? response.status : 'Unknown'}: ${errorBody.substring(0, 100)}...`);
             }
 
@@ -832,10 +961,29 @@
 
 
     // --- Event Listeners and Initialization ---
+    
+    /**
+     * Toggles the UI controls for the text background box.
+     */
+    function toggleTextBgControls(enabled) {
+        if (enabled) {
+            textBgControlsDiv.classList.remove('opacity-50', 'pointer-events-none');
+            textBgControlsDiv.classList.add('opacity-100');
+        } else {
+            textBgControlsDiv.classList.add('opacity-50', 'pointer-events-none');
+            textBgControlsDiv.classList.remove('opacity-100');
+        }
+        state.textBg.enabled = enabled;
+        redrawCanvas();
+    }
+
 
     function setupEventListeners() {
         // Set up initial dimensions
         setCanvasDimensions(); 
+        
+        // Initialize text background controls state
+        toggleTextBgControls(state.textBg.enabled);
 
         // 1. Platform Select
         platformSelect.addEventListener('change', setCanvasDimensions);
@@ -851,7 +999,6 @@
                         state.backgroundImage = img;
                         redrawCanvas();
                     };
-                    // Fallback placeholder in case of load error (though not expected for local files)
                     img.onerror = () => {
                         console.error("Error loading image file.");
                         state.backgroundImage = null;
@@ -874,16 +1021,17 @@
                     img.onload = () => {
                         state.logoImage = img;
                         logoSizeControl.style.display = 'flex'; // Show size control
-                        // Set default logo size based on a percentage of canvas width
+                        
                         const canvasFraction = 0.15;
                         const defaultWidth = Math.min(img.width, state.canvasWidth * canvasFraction); 
                         state.logoObject.width = defaultWidth;
                         state.logoObject.height = (img.height / img.width) * defaultWidth;
-                        // Center logo horizontally and place near bottom
+                        
                         state.logoObject.x = state.canvasWidth / 2 - state.logoObject.width / 2;
                         state.logoObject.y = state.canvasHeight - state.logoObject.height - 50; 
-                        logoSizeSlider.value = 100; // Reset slider to default center
-                        logoSizeValueSpan.textContent = '1.00x'; // Display scale factor
+                        
+                        logoSizeSlider.value = 100;
+                        logoSizeValueSpan.textContent = '1.00x';
                         redrawCanvas();
                     };
                     img.onerror = () => {
@@ -923,7 +1071,6 @@
             state.textObject.color = e.target.value;
             redrawCanvas();
         });
-        // UPDATED: No change needed here, just ensures the max value is handled
         textSize.addEventListener('input', (e) => {
             state.textObject.size = parseInt(e.target.value, 10);
             textSizeValue.textContent = `${e.target.value}px`;
@@ -931,8 +1078,7 @@
         });
         textFont.addEventListener('change', (e) => {
             state.textObject.font = e.target.value;
-            // When font changes, recalculate text position to keep it visually centered
-            state.textObject.x = state.canvasWidth / 2;
+            state.textObject.x = state.canvasWidth / 2; // Recenter text block
             redrawCanvas();
         });
 
@@ -963,29 +1109,35 @@
             });
         });
 
-        // 6. AI Content Generator
+        // 6. Text Background/Highlight Controls (NEW)
+        enableTextBgCheckbox.addEventListener('change', (e) => {
+            toggleTextBgControls(e.target.checked);
+        });
+        textBgColorInput.addEventListener('input', (e) => {
+            state.textBg.color = e.target.value;
+            redrawCanvas();
+        });
+        textBgOpacitySlider.addEventListener('input', (e) => {
+            state.textBg.opacity = parseFloat(e.target.value);
+            textBgOpacityValueSpan.textContent = `${Math.round(state.textBg.opacity * 100)}%`;
+            redrawCanvas();
+        });
+        textBgPaddingSlider.addEventListener('input', (e) => {
+            state.textBg.padding = parseInt(e.target.value, 10);
+            textBgPaddingValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+        textBgRadiusSlider.addEventListener('input', (e) => {
+            state.textBg.radius = parseInt(e.target.value, 10);
+            textBgRadiusValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+
+
+        // 7. AI Content Generator
         generateButton.addEventListener('click', generateAiContent);
 
-        // 7. Border/Frame Customization
-        borderColorInput.addEventListener('input', (e) => {
-            state.borderColor = e.target.value;
-            redrawCanvas();
-        });
-        borderThicknessSlider.addEventListener('input', (e) => {
-            state.borderThickness = parseInt(e.target.value, 10);
-            borderThicknessValueSpan.textContent = `${e.target.value}px`;
-            redrawCanvas();
-        });
-        
-        // Corner Style Select
-        cornerStyleSelect.addEventListener('change', (e) => {
-            state.cornerStyle = e.target.value;
-            const radius = state.cornerStyle === 'rounded' ? '0.5rem' : '0px';
-            canvas.style.setProperty('--canvas-border-radius', radius);
-            redrawCanvas();
-        });
-
-        // Shadow Controls
+        // 8. Text Shadow Controls
         shadowColorInput.addEventListener('input', (e) => {
             state.shadowColor = e.target.value;
             redrawCanvas();
@@ -1003,6 +1155,26 @@
         shadowOffsetYSlider.addEventListener('input', (e) => {
             state.shadowOffsetY = parseInt(e.target.value, 10);
             shadowOffsetYValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+
+
+        // 9. Border/Frame Customization
+        borderColorInput.addEventListener('input', (e) => {
+            state.borderColor = e.target.value;
+            redrawCanvas();
+        });
+        borderThicknessSlider.addEventListener('input', (e) => {
+            state.borderThickness = parseInt(e.target.value, 10);
+            borderThicknessValueSpan.textContent = `${e.target.value}px`;
+            redrawCanvas();
+        });
+        
+        // Corner Style Select
+        cornerStyleSelect.addEventListener('change', (e) => {
+            state.cornerStyle = e.target.value;
+            const radius = state.cornerStyle === 'rounded' ? '0.5rem' : '0px';
+            canvas.style.setProperty('--canvas-border-radius', radius);
             redrawCanvas();
         });
 
@@ -1029,23 +1201,20 @@
             logoSizeValueSpan.textContent = `${scaleFactor.toFixed(2)}x`; // Display scale factor
 
             if (state.logoImage) {
-                // Calculate new size based on original image dimensions
                 const originalWidth = state.logoImage.width;
                 const originalHeight = state.logoImage.height;
-                const canvasFraction = 0.15; // The base size is 15% of the canvas width
+                const canvasFraction = 0.15; 
 
-                // Calculate the original size used when the image was loaded (scaleFactor 1.0)
                 const baseWidth = Math.min(originalWidth, state.canvasWidth * canvasFraction);
                 const baseHeight = (originalHeight / originalWidth) * baseWidth;
                 
-                // Apply the slider scale factor to the base size
-                state.logoObject.width = baseWidth * scaleFactor;
-                state.logoObject.height = baseHeight * scaleFactor;
-
                 // Keep logo centered relative to its current position (center of the logo)
                 const centerX = state.logoObject.x + state.logoObject.width / 2;
                 const centerY = state.logoObject.y + state.logoObject.height / 2;
                 
+                state.logoObject.width = baseWidth * scaleFactor;
+                state.logoObject.height = baseHeight * scaleFactor;
+
                 state.logoObject.x = centerX - state.logoObject.width / 2;
                 state.logoObject.y = centerY - state.logoObject.height / 2;
 
